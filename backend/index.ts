@@ -1,11 +1,10 @@
-import "dotenv/config"; // ✅ load .env otomatis
+import "dotenv/config";
 import { authRoutes } from "./src/routes/auth";
 import { contentRoutes } from "./src/routes/contentRoutes";
 import { genreRoutes } from "./src/routes/genre";
 import { seasonRoutes } from "./src/routes/season";
 import { uploadRoutes } from "./src/routes/uploadRoutes";
 
-// ✅ CORS Handler
 function withCORS(response: Response): Response {
   const headers = new Headers(response.headers);
   headers.set("Access-Control-Allow-Origin", "*");
@@ -22,10 +21,8 @@ function withCORS(response: Response): Response {
   });
 }
 
-// ✅ PORT dari .env atau fallback
-const PORT = Number(process.env.PORT) || 3001;
+const PORT = Number(process.env.PORT);
 
-// ✅ Main server
 const server = Bun.serve({
   port: PORT,
   async fetch(req) {
