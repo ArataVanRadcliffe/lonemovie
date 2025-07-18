@@ -1,0 +1,269 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model bookmark {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  content_id Int
+  created_at DateTime @default(now())
+  content    content  @relation(fields: [content_id], references: [id], map: "Bookmark_content_id_fkey")
+  user       user     @relation(fields: [user_id], references: [id], map: "Bookmark_user_id_fkey")
+
+  @@unique([user_id, content_id], map: "Bookmark_user_id_content_id_key")
+  @@index([content_id], map: "Bookmark_content_id_fkey")
+}
+
+model comment {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  content_id Int
+  episode_id Int
+  comment    String
+  created_at DateTime @default(now())
+  content    content  @relation(fields: [content_id], references: [id], map: "Comment_content_id_fkey")
+  episode    episode  @relation(fields: [episode_id], references: [id], map: "Comment_episode_id_fkey")
+  user       user     @relation(fields: [user_id], references: [id], map: "Comment_user_id_fkey")
+
+  @@index([content_id], map: "Comment_content_id_fkey")
+  @@index([episode_id], map: "Comment_episode_id_fkey")
+  @@index([user_id], map: "Comment_user_id_fkey")
+}
+
+model content {
+  id               Int                  @id @default(autoincrement())
+  title            String
+  slug             String               @unique
+  title_english    String?
+  title_japanese   String?
+  description String? @db.Text
+  type             content_type
+  release_year     Int?
+  season_name      content_season_name?
+  studios          String?
+  actor            String?
+  score            Float?
+  thumbnail_url    String?
+  backdrop_url     String?
+  video_url        String?
+  created_at       DateTime             @default(now())
+  duration_minutes Int?
+  num_seasons      Int?
+  num_episodes     Int?
+  bookmark         bookmark[]
+  comment          comment[]
+  contentgenre     contentgenre[]
+  episode          episode[]
+  rating           rating[]
+  reportcontent    reportcontent[]
+  season           season[]
+  subtitle         subtitle[]
+  trendingcontent  trendingcontent[]
+  watchhistory     watchhistory[]
+}
+
+model contentgenre {
+  content_id Int
+  genre_id   Int
+  content    content @relation(fields: [content_id], references: [id], map: "ContentGenre_content_id_fkey")
+  genre      genre   @relation(fields: [genre_id], references: [id], map: "ContentGenre_genre_id_fkey")
+
+  @@id([content_id, genre_id])
+  @@index([genre_id], map: "ContentGenre_genre_id_fkey")
+}
+
+model episode {
+  id             Int             @id @default(autoincrement())
+  content_id     Int
+  season         Int
+  episode_number Int
+  title          String?
+  created_at     DateTime        @default(now())
+  comment        comment[]
+  content        content         @relation(fields: [content_id], references: [id], map: "Episode_content_id_fkey")
+  episodesource  episodesource[]
+  reportcontent  reportcontent[]
+  subtitle       subtitle[]
+  watchhistory   watchhistory[]
+
+  @@index([content_id], map: "Episode_content_id_fkey")
+}
+
+model genre {
+  id           Int            @id @default(autoincrement())
+  name         String         @unique(map: "Genre_name_key")
+  contentgenre contentgenre[]
+}
+
+model notification {
+  id         Int               @id @default(autoincrement())
+  user_id    Int
+  type       notification_type
+  message    String
+  is_read    Boolean           @default(false)
+  created_at DateTime          @default(now())
+  user       user              @relation(fields: [user_id], references: [id], map: "Notification_user_id_fkey")
+
+  @@index([user_id], map: "Notification_user_id_fkey")
+}
+
+model rating {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  content_id Int
+  rating     Int
+  comment    String?
+  created_at DateTime @default(now())
+  content    content  @relation(fields: [content_id], references: [id], map: "Rating_content_id_fkey")
+  user       user     @relation(fields: [user_id], references: [id], map: "Rating_user_id_fkey")
+
+  @@unique([user_id, content_id], map: "Rating_user_id_content_id_key")
+  @@index([content_id], map: "Rating_content_id_fkey")
+}
+
+model reportcontent {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  content_id Int
+  episode_id Int
+  reason     String
+  created_at DateTime @default(now())
+  content    content  @relation(fields: [content_id], references: [id], map: "ReportContent_content_id_fkey")
+  episode    episode  @relation(fields: [episode_id], references: [id], map: "ReportContent_episode_id_fkey")
+  user       user     @relation(fields: [user_id], references: [id], map: "ReportContent_user_id_fkey")
+
+  @@index([content_id], map: "ReportContent_content_id_fkey")
+  @@index([episode_id], map: "ReportContent_episode_id_fkey")
+  @@index([user_id], map: "ReportContent_user_id_fkey")
+}
+
+model searchlog {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  keyword     String
+  searched_at DateTime @default(now())
+  user        user     @relation(fields: [user_id], references: [id], map: "SearchLog_user_id_fkey")
+
+  @@index([user_id], map: "SearchLog_user_id_fkey")
+}
+
+model season {
+  id            Int      @id @default(autoincrement())
+  content_id    Int
+  season_number Int
+  title         String
+  description   String?
+  thumbnail_url String?
+  created_at    DateTime @default(now())
+  content       content  @relation(fields: [content_id], references: [id], map: "Season_content_id_fkey")
+
+  @@unique([content_id, season_number], map: "Season_content_id_season_number_key")
+}
+
+model subtitle {
+  id         Int      @id @default(autoincrement())
+  content_id Int
+  episode_id Int
+  language   String
+  file_url   String
+  created_at DateTime @default(now())
+  content    content  @relation(fields: [content_id], references: [id], map: "Subtitle_content_id_fkey")
+  episode    episode  @relation(fields: [episode_id], references: [id], map: "Subtitle_episode_id_fkey")
+
+  @@index([content_id], map: "Subtitle_content_id_fkey")
+  @@index([episode_id], map: "Subtitle_episode_id_fkey")
+}
+
+model trendingcontent {
+  id         Int      @id @default(autoincrement())
+  content_id Int
+  week_start DateTime
+  view_count Int
+  created_at DateTime @default(now())
+  content    content  @relation(fields: [content_id], references: [id], map: "TrendingContent_content_id_fkey")
+
+  @@unique([content_id, week_start], map: "TrendingContent_content_id_week_start_key")
+}
+
+model user {
+  id            Int             @id @default(autoincrement())
+  email         String          @unique(map: "User_email_key")
+  password      String
+  role          user_role       @default(member)
+  created_at    DateTime        @default(now())
+  bookmark      bookmark[]
+  comment       comment[]
+  notification  notification[]
+  rating        rating[]
+  reportcontent reportcontent[]
+  searchlog     searchlog[]
+  watchhistory  watchhistory[]
+}
+
+model watchhistory {
+  id                 Int      @id @default(autoincrement())
+  user_id            Int
+  content_id         Int
+  episode_id         Int
+  last_watch_seconds Int
+  updated_at         DateTime @default(now())
+  content            content  @relation(fields: [content_id], references: [id], map: "WatchHistory_content_id_fkey")
+  episode            episode  @relation(fields: [episode_id], references: [id], map: "WatchHistory_episode_id_fkey")
+  user               user     @relation(fields: [user_id], references: [id], map: "WatchHistory_user_id_fkey")
+
+  @@index([content_id], map: "WatchHistory_content_id_fkey")
+  @@index([episode_id], map: "WatchHistory_episode_id_fkey")
+  @@index([user_id], map: "WatchHistory_user_id_fkey")
+}
+
+model episodesource {
+  id         Int                    @id @default(autoincrement())
+  episode_id Int
+  provider   String
+  priority   Int                    @default(0)
+  created_at DateTime               @default(now())
+  episode    episode                @relation(fields: [episode_id], references: [id])
+  qualities  episodesourcequality[]
+
+  @@index([episode_id], map: "episodesource_episode_id_fkey")
+}
+
+model episodesourcequality {
+  id               Int           @id @default(autoincrement())
+  episodesource_id Int
+  resolution       String
+  url              String
+  created_at       DateTime      @default(now())
+  episodesource    episodesource @relation(fields: [episodesource_id], references: [id])
+
+  @@index([episodesource_id], map: "episodesourcequality_episodesource_id_fkey")
+}
+
+enum notification_type {
+  new_episode
+  recommendation
+  general
+}
+
+enum content_type {
+  movie
+  series
+  anime
+}
+
+enum user_role {
+  member
+  admin
+}
+
+enum content_season_name {
+  spring
+  summer
+  fall
+  winter
+}
